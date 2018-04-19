@@ -1,0 +1,10 @@
+.dub
+docs.json
+__dummy.html
+*.o
+*.obj
+config.json
+/d-push-bot
+dub.selections.json
+/feed-date.txt
+/packages.txt
