@@ -7,13 +7,16 @@ import std.stdio;
 import std.uri : encodeComponent;
 import telega = telega.botapi;
 
+Json jsonConfig;
 struct Config
 {
-	string pushUrl;
 	string feed;
+	DiscordConfig discord;
 }
-
-Json jsonConfig;
+struct DiscordConfig
+{
+	string pushUrl;
+}
 SysTime configDate;
 Config config;
 telega.BotApi telegram;
@@ -264,7 +267,7 @@ void checkDubUpdates()
 
 void sendDiscordMessage(string msg, string username = null)
 {
-	requestHTTP(config.pushUrl, (scope req) {
+	requestHTTP(config.discord.pushUrl, (scope req) {
 		req.method = HTTPMethod.POST;
 		Json obj = Json.emptyObject;
 		if (username.length)
@@ -297,7 +300,7 @@ struct Embed
 
 void sendEmbeds(Embed[] msg, string username = null)
 {
-	requestHTTP(config.pushUrl, (scope req) {
+	requestHTTP(config.discord.pushUrl, (scope req) {
 		req.method = HTTPMethod.POST;
 		Json obj = Json.emptyObject;
 		if (username.length)
