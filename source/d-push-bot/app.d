@@ -1,3 +1,5 @@
+module d_push_bot;
+
 import vibe.vibe;
 
 import std.algorithm;
