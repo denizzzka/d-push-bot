@@ -5,6 +5,7 @@ import std.datetime.systime;
 import std.functional;
 import std.stdio;
 import std.uri : encodeComponent;
+import telega = telega.botapi;
 
 struct Config
 {
@@ -12,15 +13,32 @@ struct Config
 	string feed;
 }
 
+Json jsonConfig;
 SysTime configDate;
 Config config;
+telega.BotApi telegram;
+
 void main()
 {
-	config = deserializeJson!Config(parseJsonString(readFileUTF8("config.json")));
+	jsonConfig = parseJsonString(readFileUTF8("config.json"));
+	config = deserializeJson!Config(jsonConfig);
 	configDate = getFileInfo("config.json").timeModified;
+	telegram = new telega.BotApi(jsonConfig["telegram"]["secretBotToken"].get!string);
+	checkTelegramChatId();
 	setTimer(10.minutes, (&checkUpdates).toDelegate);
 	runTask(&checkUpdates);
 	runApplication();
+}
+
+private void checkTelegramChatId()
+{
+	if(jsonConfig["telegram"]["chatId"].type == Json.Type.null_)
+	{
+		logInfo("Please write something to bot for obtain chatId");
+		auto u = telegram.getUpdates;
+		logInfo("Got Telegram chat id %d, place this value into config", u[0].message.chat.id);
+		return;
+	}
 }
 
 void checkUpdates()
@@ -32,7 +50,7 @@ void checkUpdates()
 		configDate = configModify;
 	}
 	runTask(&checkDubUpdates);
-	runTask(&checkAnnounceFeed);
+	//~ runTask(&checkAnnounceFeed);
 }
 
 string requestString(string url)
@@ -229,8 +247,10 @@ void checkDubUpdates()
 				}
 				if (gitUrl.length)
 					gitUrl ~= repo["owner"].get!string ~ "/" ~ repo["project"].get!string;
-				sendMessage("A new dub packages has just been released:\nhttps://code.dlang.org/packages/"
-						~ pkg.encodeComponent ~ "\n" ~ gitUrl, "DUB Package Releases");
+				//~ sendDiscordMessage("A new dub packages has just been released:\nhttps://code.dlang.org/packages/"
+						//~ ~ pkg.encodeComponent ~ "\n" ~ gitUrl, "DUB Package Releases");
+				sendTelegramMessage("A new dub packages has just been released:\nhttps://code.dlang.org/packages/"
+						~ pkg.encodeComponent ~ "\n" ~ gitUrl~" (DUB Package Releases)");
 				sleep(2.seconds);
 			}
 		}
@@ -242,7 +262,7 @@ void checkDubUpdates()
 	}
 }
 
-void sendMessage(string msg, string username = null)
+void sendDiscordMessage(string msg, string username = null)
 {
 	requestHTTP(config.pushUrl, (scope req) {
 		req.method = HTTPMethod.POST;
@@ -252,6 +272,11 @@ void sendMessage(string msg, string username = null)
 		obj["content"] = msg;
 		req.writeJsonBody(obj);
 	}, (scope res) {  });
+}
+
+void sendTelegramMessage(string msg)
+{
+	telegram.sendMessage(jsonConfig["telegram"]["chatId"].get!long, msg);
 }
 
 struct Embed
