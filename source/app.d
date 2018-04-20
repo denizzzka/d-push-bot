@@ -253,7 +253,7 @@ void checkDubUpdates()
 				//~ sendDiscordMessage("A new dub packages has just been released:\nhttps://code.dlang.org/packages/"
 						//~ ~ pkg.encodeComponent ~ "\n" ~ gitUrl, "DUB Package Releases");
 				sendTelegramMessage("A new dub packages has just been released:\nhttps://code.dlang.org/packages/"
-						~ pkg.encodeComponent ~ "\n" ~ gitUrl~" (DUB Package Releases)");
+						~ pkg.encodeComponent ~ "\n" ~ gitUrl);
 				sleep(2.seconds);
 			}
 		}
